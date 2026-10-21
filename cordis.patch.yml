@@ -1,0 +1,4 @@
+# @voltage12/dsh-simple-worktree bundle patch: one insert over the profile root.
+- insert:
+    - id: dsh-simple-worktree
+      name: '@voltage12/dsh-simple-worktree'
