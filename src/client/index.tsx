@@ -5,9 +5,10 @@
  *  - `conversation.input.left`: a Worktree button that creates
  *    `<repo>/.agents/worktree/<branch>` and adopts it as a Workspace + Session.
  *  - `sidebar.workspaces.session.menu.item`: a "Delete Worktree" row that
- *    archives the workspace's sessions, drops the workspace registration and
- *    removes the linked worktree directory (the branch survives).
+ *    removes the linked worktree, archives the workspace's sessions and then
+ *    drops the workspace registration (the branch survives).
  */
+import { createDeleteWorktree } from './delete-worktree'
 import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import {
   Button,
@@ -725,14 +726,16 @@ function DeleteWorktreeGate(props: {
   onDone: (text: string) => void
 }) {
   const [ready, setReady] = useState(false)
+  const cwd = useRef(props.cwd).current
+  const workspaceId = useRef(props.workspaceId).current
 
   useEffect(() => {
     let alive = true
-    if (props.cwd === undefined) {
+    if (cwd === undefined) {
       props.onSkip(props.t('notWorktree'))
       return () => { alive = false }
     }
-    probeRepo(props.cwd)
+    probeRepo(cwd)
       .then(info => {
         if (!alive)
           return
@@ -751,7 +754,7 @@ function DeleteWorktreeGate(props: {
           props.onSkip(errorText(failure))
       })
     return () => { alive = false }
-  }, [props.cwd])
+  }, [cwd])
 
   if (!ready)
     return null
@@ -759,8 +762,8 @@ function DeleteWorktreeGate(props: {
   return (
     <DeleteWorktreeDialog
       pending={props.pending}
-      cwd={props.cwd}
-      workspaceId={props.workspaceId}
+      cwd={cwd}
+      workspaceId={workspaceId}
       sessionIds={props.sessionIds}
       t={props.t}
       deleteWorktree={props.deleteWorktree}
@@ -905,26 +908,7 @@ export function apply(ctx: Context) {
     return created
   }
 
-  const deleteWorktree = async (input: { sessionId: string; workspaceId: string; path: string }) => {
-    const workspaceId = input.workspaceId as WorkspaceId
-    const workspace = ctx.workspaces.list.getSnapshot().items.find(item => item.workspaceId === workspaceId)
-    // A retry after a removal that failed post-delete must still be able to
-    // finish the git half: the registration is already gone.
-    if (workspace !== undefined) {
-      const sessions = ctx.sessions.list.getSnapshot().byId
-      const running = workspace.sessionIds.filter(id => sessions[id]?.running === true)
-      if (running.length > 0)
-        throw new Error('running')
-
-      // Order requested by the operator: sessions, workspace registration, then
-      // the git worktree. Every step is awaited so a refusal leaves the next
-      // step untouched.
-      for (const id of workspace.sessionIds)
-        await ctx.uiWorkspace.archiveSession(id)
-      await ctx.workspaces.delete(workspaceId)
-    }
-    await removeOnDisk({ path: input.path, force: true })
-  }
+  const deleteWorktree = createDeleteWorktree(ctx, removeOnDisk)
 
   ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
     name: 'conversation.input.left',

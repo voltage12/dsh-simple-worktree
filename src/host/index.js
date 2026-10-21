@@ -9,7 +9,7 @@
  */
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
+import { lstat, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, join, normalize, resolve } from 'node:path'
 
 export const name = 'simple-worktree'
@@ -91,7 +91,7 @@ function friendlyGitMessage(result, fallback) {
     return '该目录已被 git 登记为 worktree，请先执行 git worktree prune'
   if (/contains modified or untracked files/i.test(raw))
     return 'worktree 内有未提交的改动，无法删除'
-  if (/is locked/i.test(raw))
+  if (/is locked|locked working tree/i.test(raw))
     return 'worktree 已被锁定，无法删除'
   if (/invalid reference/i.test(raw))
     return '分支或提交不存在'
@@ -371,27 +371,26 @@ async function removeWorktree(body) {
     target.top,
   ])
 
-  if (!result.ok) {
-    // A locked/broken registration still owns the directory; drop the admin
-    // entry and remove the folder so the user's explicit delete lands.
-    await runGit(target.mainRoot, ['worktree', 'unlock', target.top])
-    await runGit(target.mainRoot, ['worktree', 'prune'])
-    if (existsSync(target.top))
-      await rm(target.top, { recursive: true, force: true })
-    await runGit(target.mainRoot, ['worktree', 'prune'])
-    if (existsSync(target.top))
-      throw new Error(friendlyGitMessage(result, '删除 worktree 失败'))
-  }
+  // Git owns both the registration and directory. Never bypass a refusal
+  // (including locks or partial filesystem failures) with unlock/prune/rm.
+  if (!result.ok)
+    throw new Error(friendlyGitMessage(result, '删除 worktree 失败'))
 
-  if (existsSync(target.top))
-    await rm(target.top, { recursive: true, force: true })
-  await runGit(target.mainRoot, ['worktree', 'prune'])
-
-  return {
-    removed: true,
-    path: target.top,
-    branch: target.branch ?? '',
+  // A successful command is not permission to delete a surviving or newly
+  // recreated directory. lstat also detects dangling symlinks and propagates
+  // unexpected filesystem errors instead of treating them as absence.
+  try {
+    await lstat(target.top)
+  } catch (error) {
+    if (error?.code !== 'ENOENT')
+      throw error
+    return {
+      removed: true,
+      path: target.top,
+      branch: target.branch ?? '',
+    }
   }
+  throw new Error(`Git 返回成功，但目录仍存在，已保留目录，请检查后重试：${target.top}`)
 }
 
 /** Read and JSON-parse one bounded request body. */

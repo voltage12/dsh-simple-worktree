@@ -55,6 +55,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
+    "test": "node --experimental-test-module-mocks --test test/*.test.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prepack": "node build.mjs && tsc -p tsconfig.json --noEmit"
   },

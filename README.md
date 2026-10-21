@@ -32,7 +32,9 @@ DSH Web 插件（非官方）：在会话输入框工具行一键创建 git work
   - worktree 目录（未提交改动会丢失）；
   - 未提交改动数、未推送提交数；
   - 分支会保留。
-- 确认后按顺序执行：归档会话 → 注销 Workspace → `git worktree remove --force` 并清理残留目录。
+- 确认后按顺序执行：`git worktree remove --force` → 归档会话 → 注销 Workspace。Git 拒绝删除或目录仍存在时停止，不会自动解锁、prune 或递归强删目录，也不会改变 Workspace / Session 状态。
+- 磁盘删除成功后若归档或注销失败，会尝试恢复本次归档的会话（保留原已归档会话），保留弹窗供重试；当前插件实例记住已完成的磁盘删除，重试不会再次删除同一路径。刷新或重启后该进度不保留，需手动检查目录及工作区注册；不会根据目录缺失擅自认定删除成功。
+- 异步步骤间重新检查会话运行状态及工作区成员；发生变化时停止清理并显示错误。跨 Git 与 DSH 的操作不是原子事务，无法恢复 Git 已删除的文件。
 - 有会话正在运行时拒绝删除并提示。
 - 分支**不会**被删除。
 
@@ -82,6 +84,7 @@ dsh plugin --profile desktop remove @voltage12/dsh-simple-worktree
 
 ```sh
 pnpm install
+pnpm test          # 临时 Git 仓库及故障注入回归测试
 pnpm build         # lib/index.js (host) + lib/client.js (web client)
 pnpm typecheck
 pnpm pack          # 发布前构建并检查 tarball
