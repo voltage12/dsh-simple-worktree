@@ -12,7 +12,6 @@ import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import {
   Button,
   Checkbox,
-  IconBranchOutlineRegular,
   IconChevronDownOutlineRegular,
   IconTrashOutlineRegular,
   Input,
@@ -31,6 +30,34 @@ import type {} from '@deepseek-ai/dsh-client-ui-session/client'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+
+/**
+ * The primitives package only ships a horizontal fork. A vertical trunk reads
+ * better in the 28×28 composer button, so this variant stays local.
+ */
+function IconBranchVerticalRegular({ size = 16, className }: { size?: number; className?: string }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      className={className}
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      stroke="currentColor"
+      strokeWidth={1}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="4.5" cy="3" r="1.5" />
+      <circle cx="4.5" cy="13" r="1.5" />
+      <circle cx="12" cy="5" r="1.5" />
+      <path d="M4.5 4.5v7" />
+      <path d="M4.5 8h5.5c1.105 0 2-.895 2-1.5" />
+    </svg>
+  )
+}
 
 export const name = 'simple-worktree'
 export const inject = ['slots', 'sessions', 'workspaces', 'uiWorkspace', 'locale']
@@ -541,7 +568,7 @@ function WorktreeButton({ sessionId, useSessions, useWorkspaces, t, createWorktr
         size="sm"
         title={t('buttonTitle')}
         aria-label={t('buttonTitle')}
-        icon={<IconBranchOutlineRegular size={16} />}
+        icon={<IconBranchVerticalRegular size={16} />}
         style={{ width: 28, minWidth: 28, padding: 0, flex: 'none' }}
         onClick={() => { void openDialog() }}
       />
@@ -819,7 +846,7 @@ function DeleteWorktreeDialog(props: {
     >
       <div className="wt-dialog-body" style={{ fontSize: 13, lineHeight: '20px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 500, minWidth: 0 }}>
-          <IconBranchOutlineRegular size={14} />
+          <IconBranchVerticalRegular size={14} />
           <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {facts === null ? t('reading') : (facts.branch !== '' ? facts.branch : t('detachedHead'))}
           </span>
