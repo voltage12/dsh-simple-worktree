@@ -1,6 +1,6 @@
 {
   "name": "@voltage12/dsh-simple-worktree",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "DSH Web plugin: create and remove git worktrees from the conversation UI",
   "license": "MIT",
   "author": "xiejinyang (https://github.com/voltage12)",
