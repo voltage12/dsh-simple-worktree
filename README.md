@@ -2,7 +2,7 @@
 
 DSH Web 插件（非官方）：在会话输入框工具行一键创建 git worktree，并在会话「…」菜单里把它连同工作区一起收掉。
 
-![创建 worktree](https://cdn.jsdelivr.net/npm/@voltage12/dsh-simple-worktree/docs/create-dialog.png)
+![创建 worktree](https://cdn.jsdelivr.net/gh/voltage12/dsh-simple-worktree@main/docs/create-dialog.png)
 
 ## 功能
 
@@ -20,7 +20,7 @@ DSH Web 插件（非官方）：在会话输入框工具行一键创建 git work
 - 如果当前会话本身就在 worktree 中（不是主仓库），弹窗底部会多出「删除当前 Worktree」；它与「…」菜单里的「删除 Worktree」走**完全相同**的确认、归档、注销、删除流程。
 - git 失败时弹窗保留、显示原始错误，可改名重试。
 
-![弹窗内删除当前 Worktree](https://cdn.jsdelivr.net/npm/@voltage12/dsh-simple-worktree/docs/create-dialog-worktree.png)
+![弹窗内删除当前 Worktree](https://cdn.jsdelivr.net/gh/voltage12/dsh-simple-worktree@main/docs/create-dialog-worktree.png)
 
 ### 删除 Worktree
 
@@ -38,7 +38,7 @@ DSH Web 插件（非官方）：在会话输入框工具行一键创建 git work
 
 > DSH 的会话只能归档、不能物理删除；这里的“删除会话”即归档。
 
-![删除确认](https://cdn.jsdelivr.net/npm/@voltage12/dsh-simple-worktree/docs/delete-dialog.png)
+![删除确认](https://cdn.jsdelivr.net/gh/voltage12/dsh-simple-worktree@main/docs/delete-dialog.png)
 
 ## 安装
 
