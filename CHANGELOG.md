@@ -2,8 +2,12 @@
 
 ## 0.1.2
 
-Security and data-preservation release of the deletion fix in commit
-`147e64db51575c85d407f44681ad1ed8777a873f`.
+Security, data-preservation, and session-context release. It includes the
+deletion fix in commit `147e64db51575c85d407f44681ad1ed8777a873f`.
+
+- Show the current Git branch beside the Worktree button in the session
+  composer. It refreshes while the session is open and stays hidden outside a
+  Git repository or when `HEAD` is detached.
 
 - Complete Git worktree deletion and confirm the result before archiving sessions
   or unregistering the workspace.

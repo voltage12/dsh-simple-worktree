@@ -210,6 +210,17 @@ async function probe(directory) {
   }
 }
 
+/** Return only the current branch for a session cwd; detached HEAD is blank. */
+async function sessionBranch(directory) {
+  const dir = await requireDirectory(directory)
+  const root = await runGit(dir, ['rev-parse', '--show-toplevel'])
+  if (!root.ok)
+    return { isRepo: false, branch: '' }
+
+  const result = await runGit(dir, ['symbolic-ref', '--quiet', '--short', 'HEAD'])
+  return { isRepo: true, branch: result.ok ? result.stdout.trim() : '' }
+}
+
 /** Flatten a branch name into one directory segment: `feat/login` -> `feat-login`. */
 function flattenBranch(branch) {
   return branch.split('/').join('-')
@@ -470,10 +481,11 @@ export function apply(ctx) {
     }
 
     get(`${ROUTE_PREFIX}/probe`, query => probe(query.get('path') ?? ''))
+    get(`${ROUTE_PREFIX}/branch`, query => sessionBranch(query.get('path') ?? ''))
     post(`${ROUTE_PREFIX}/create`, body => createWorktree(body))
     post(`${ROUTE_PREFIX}/inspect`, body => inspectWorktree(body))
     post(`${ROUTE_PREFIX}/remove`, body => removeWorktree(body))
   })
 }
 
-export { createWorktree, inspectWorktree, probe, removeWorktree }
+export { createWorktree, inspectWorktree, probe, removeWorktree, sessionBranch }

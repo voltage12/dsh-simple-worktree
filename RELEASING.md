@@ -1,9 +1,8 @@
-# Publishing the 0.1.2 safety release
+# Publishing the 0.1.2 safety and branch display release
 
 This release contains the deletion fix already merged as
-`147e64db51575c85d407f44681ad1ed8777a873f`. Runtime source, generated Host and
-Client bundles, the lockfile, and the existing regression tests are unchanged
-from that commit. Creation-flow recovery is excluded.
+`147e64db51575c85d407f44681ad1ed8777a873f`, plus a session composer branch
+indicator backed by a lightweight Host route. Creation-flow recovery is excluded.
 
 ## Verified on 2026-10-22
 
@@ -12,12 +11,12 @@ from that commit. Creation-flow recovery is excluded.
 - The downloaded `0.1.1` tarball has SHA-1
   `97ff143099fb6c06078865776a73dc27abc79eac` and contains the old unsafe deletion
   fallback and archive-before-disk-delete order.
-- Node `24.19.0`, pnpm `11.25.0`: `pnpm test` (28/28), `pnpm build`,
+- Node `24.19.0`, pnpm `11.25.0`: `pnpm test` (30/30), `pnpm build`,
   `pnpm typecheck`, and `pnpm pack` pass.
 - Installing the generated tarball in a clean temporary prefix succeeds.
   `scripts/verify-package.mjs` checks its manifest and exact bundle contents,
-  then runs all 28 existing safety regressions against the installed Host and
-  the Client helper in the installed browser bundle. All pass. The script
+  then runs all 30 deletion and branch-query regressions against the installed
+  Host and the Client deletion helper in the installed browser bundle. All pass. The script
   exposes the private Client helper only in memory; shipped code is unchanged.
 - `npm publish <tarball> --dry-run --access public --tag latest
   --registry=https://registry.npmjs.org` passes packaging validation.
@@ -79,4 +78,5 @@ node --input-type=module -e 'import {readFileSync} from "node:fs"; import {creat
 ```
 
 These checks validate package installation and deletion logic. A full DSH web
-UI smoke test still requires a running compatible DSH instance.
+The branch label's live composer rendering still requires a running compatible
+DSH instance for a UI smoke test.

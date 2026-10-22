@@ -144,6 +144,11 @@ interface ProbeFact {
   branches?: BranchFact[]
 }
 
+interface SessionBranchFact {
+  isRepo: boolean
+  branch: string
+}
+
 interface CreateFact {
   path: string
   branch: string
@@ -174,6 +179,10 @@ async function request<T>(method: 'GET' | 'POST', path: string, body?: unknown, 
 
 function probeRepo(path: string): Promise<ProbeFact> {
   return request<ProbeFact>('GET', '/probe', undefined, { path })
+}
+
+function getSessionBranch(path: string): Promise<SessionBranchFact> {
+  return request<SessionBranchFact>('GET', '/branch', undefined, { path })
 }
 
 function createOnDisk(input: { path: string; mode: 'new' | 'existing'; branch: string; base?: string }): Promise<CreateFact> {
@@ -528,13 +537,53 @@ function WorktreeButton({ sessionId, useSessions, useWorkspaces, t, createWorktr
   const cwd = summary?.cwd
   const workspaceId = useWorkspaces(state => state.items.find(item => item.sessionIds.includes(sessionId))?.workspaceId)
   const [repo, setRepo] = useState<ProbeFact | null>(null)
+  const [sessionBranchState, setSessionBranchState] = useState<{ cwd: string; branch: string } | null>(null)
   const [open, setOpen] = useState(false)
   const [error, setError] = useState<{ seq: number; text: string } | null>(null)
   const busy = useRef(false)
+  const sessionBranch = sessionBranchState !== null && sessionBranchState.cwd === cwd
+    ? sessionBranchState.branch
+    : ''
 
   // A session switch must not leave the previous session's dialog open.
   useEffect(() => {
     setOpen(false)
+    setRepo(null)
+    if (cwd === undefined || cwd === '')
+      return
+
+    let active = true
+    let pending = false
+    const refreshBranch = async () => {
+      if (pending)
+        return
+      pending = true
+      try {
+        const result = await getSessionBranch(cwd)
+        if (active) {
+          const next = result.isRepo ? result.branch : ''
+          setSessionBranchState(current => current?.cwd === cwd && current.branch === next
+            ? current
+            : { cwd, branch: next })
+        }
+      }
+      catch {
+        if (active)
+          setSessionBranchState(current => current?.cwd === cwd && current.branch === ''
+            ? current
+            : { cwd, branch: '' })
+      }
+      finally {
+        pending = false
+      }
+    }
+
+    void refreshBranch()
+    const timer = window.setInterval(() => { void refreshBranch() }, 5000)
+    return () => {
+      active = false
+      window.clearInterval(timer)
+    }
   }, [cwd])
 
   const openDialog = async () => {
@@ -573,6 +622,24 @@ function WorktreeButton({ sessionId, useSessions, useWorkspaces, t, createWorktr
         style={{ width: 28, minWidth: 28, padding: 0, flex: 'none' }}
         onClick={() => { void openDialog() }}
       />
+      {sessionBranch !== '' && (
+        <span
+          title={sessionBranch}
+          style={{
+            alignSelf: 'center',
+            marginLeft: 6,
+            maxWidth: 180,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            opacity: 0.72,
+            fontSize: 12,
+            lineHeight: '18px',
+          }}
+        >
+          {sessionBranch}
+        </span>
+      )}
       {open && repo !== null && cwd !== undefined && (
         <CreateWorktreeDialog
           cwd={cwd}
